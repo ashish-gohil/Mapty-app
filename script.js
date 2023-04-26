@@ -29,11 +29,6 @@ class App {
   _setToView(e) {
     if (e.target.closest('.workout')) {
       const workoutEl = e.target.closest('.workout');
-      // console.log(workoutEl);
-      // console.log(workoutEl.dataset.id);
-      // console.log(
-
-      // );
       this.#map.setView(
         this.#workouts.find(workout => workout.id === +workoutEl.dataset.id)
           .coords,
@@ -65,6 +60,23 @@ class App {
       }`,
     }).addTo(this.#map);
     this.#map.on('click', this._showForm.bind(this));
+    this._loadWorkoutsFromLocal();
+  }
+
+  _storeWorkoutsInLocal() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _loadWorkoutsFromLocal() {
+    if (localStorage.getItem('workouts')) {
+      this.#workouts = JSON.parse(localStorage.getItem('workouts'));
+      console.log(this.#workouts);
+      this.#workouts.forEach(work => {
+        this.#workout = work;
+        this._renderMarkerAndPopup(work.coords);
+        this._randerWorkoutList();
+      });
+    }
   }
 
   _showForm(mapE) {
@@ -112,7 +124,7 @@ class App {
       .openPopup();
   }
 
-  _randerWorkout() {
+  _randerWorkoutList() {
     let html = `
     <li class="workout workout--${this.#workout.workoutType}" data-id='${
       this.#workout.id
@@ -193,7 +205,8 @@ class App {
     this.#workouts.push(this.#workout);
     this._renderMarkerAndPopup([lat, lng]);
     this._hideForm();
-    this._randerWorkout();
+    this._randerWorkoutList();
+    this._storeWorkoutsInLocal();
   }
 }
 
@@ -244,4 +257,8 @@ class Cycling extends Workout {
   calSpeed() {
     this.speed = (this.distance * 60) / this.duration;
   }
+}
+function clearLocalStorage() {
+  localStorage.removeItem('workouts');
+  location.reload();
 }
